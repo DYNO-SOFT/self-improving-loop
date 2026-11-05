@@ -1,0 +1,70 @@
+{
+  "name": "@dynosoft/self-improving-loop",
+  "version": "0.2.1",
+  "description": "Self-improvement loop and cognitive-error guardrails for coding agents: verify before done, capture durable lessons and reusable skills, curate auto-memory, and detect silent skill degradation. One package, five platforms (Claude Code / Codex / Cursor / Hermes / DSH).",
+  "license": "MIT",
+  "author": {
+    "name": "DYNO SOFT",
+    "url": "https://dynosoft.md"
+  },
+  "homepage": "https://dynosoft.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DYNO-SOFT/self-improving-loop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DYNO-SOFT/self-improving-loop/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "claude-code-plugin",
+    "codex",
+    "cursor",
+    "hermes",
+    "self-improvement",
+    "learning-loop",
+    "skills",
+    "verification",
+    "cognitive-hygiene",
+    "memory",
+    "curation",
+    "skill-degradation",
+    "agent-memory",
+    "ai-agents"
+  ],
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    ".claude-plugin",
+    ".codex-plugin",
+    ".cursor-plugin",
+    ".hermes-plugin",
+    "skills",
+    "commands",
+    "hooks",
+    "dsh",
+    "CLAUDE.md",
+    "!**/__pycache__",
+    "!**/*.pyc"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.1.7 <0.3.0"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "dyno-soft",
+  "description": "Self-improvement loop and cognitive-error guardrails by DYNO SOFT.",
+  "owner": { "name": "DYNO SOFT", "url": "https://dynosoft.md" },
+  "plugins": [
+    {
+      "name": "self-improving-loop",
+      "description": "Verify before done; capture durable lessons and reusable skills; curate auto-memory.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

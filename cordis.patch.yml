@@ -1,0 +1,7 @@
+# self-improving-loop bundle patch: inserts this plugin into a profile's layer stack.
+# The module (lib/index.js) exports name + apply(ctx); apply registers the
+# self-improve skill into ctx.skills when the dsh-skill registry is mounted.
+# NOTE: `name` is the import specifier (the npm package name), not the logical id.
+- insert:
+    - id: self-improving-loop
+      name: '@dynosoft/self-improving-loop'

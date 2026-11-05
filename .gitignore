@@ -1,0 +1,11 @@
+.DS_Store
+*.log
+node_modules/
+.in_use
+__pycache__/
+*.pyc
+
+# runtime state from local tooling (oh-my-claudecode etc.)
+.omc/
+.claude/
+MEMORY.md

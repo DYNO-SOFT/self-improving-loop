@@ -1,0 +1,21 @@
+{
+  "name": "self-improving-loop",
+  "version": "0.2.1",
+  "description": "Self-improvement loop and cognitive-error guardrails: verify before done, capture lessons and skills, curate auto-memory, watch skills for degradation.",
+  "author": { "name": "DYNO SOFT", "url": "https://dynosoft.md" },
+  "homepage": "https://dynosoft.md",
+  "repository": "https://github.com/DYNO-SOFT/self-improving-loop",
+  "license": "MIT",
+  "keywords": ["self-improvement", "learning-loop", "skills", "verification", "memory"],
+  "skills": "./skills/",
+  "hooks": {},
+  "interface": {
+    "displayName": "Self-Improving Loop",
+    "shortDescription": "Verify before done; capture lessons and skills",
+    "longDescription": "A self-improvement loop for coding agents: audit your work for cognitive errors before claiming done, capture durable lessons into memory, turn repeatable procedures into skills, curate auto-memory, and detect silent skill degradation.",
+    "developerName": "DYNO SOFT",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://dynosoft.md"
+  }
+}

@@ -1,0 +1,6 @@
+name: self-improving-loop
+version: 0.2.1
+description: Self-improvement loop and cognitive-error guardrails
+author: DYNO SOFT
+provides_hooks:
+  - pre_llm_call

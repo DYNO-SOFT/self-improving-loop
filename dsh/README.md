@@ -17,5 +17,7 @@ The self-improvement loop ships as a DSH agent skill (filesystem provider at
    self-improve skill and persist verified lessons (machine facts -> this file,
    project facts -> the repo AGENTS.md).
 
-A native cordis plugin/bundle for DSH is not shipped here: it requires the DSH
-source repository and its build chain, which are not part of this repo.
+Prefer the native cordis plugin when you can use npm: `dsh plugin add
+@dynosoft/self-improving-loop` registers the skill and a runtime reminder
+context automatically (see the main README). The manual path above is for
+installs without npm.

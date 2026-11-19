@@ -4,14 +4,16 @@ description: Audit skills and memory health using telemetry — find unused/stal
 
 Run a self-improvement health audit. Show evidence before changing anything.
 
+State dir: `${SIL_DIR:-~/.claude/debug}` (written by the hooks; below as `<state>`).
+
 ## 1. Skill health (from telemetry)
 
-Read `~/.claude/debug/skill-telemetry.jsonl` (one JSON object per line:
+Read `<state>/skill-telemetry.jsonl` (one JSON object per line:
 `ts`, `event` pre|post, `skill`, and on post `outcome` success|error|empty, `error`).
 Skip lines that are not JSON (older versions wrote TSV).
 
 Per skill, from `post` events: uses, last used, error rate, empty rate. Add
-ratings from `~/.claude/debug/skill-feedback.jsonl` (`/skill-feedback`).
+ratings from `<state>/skill-feedback.jsonl` (`/skill-feedback`).
 
 | Status | Rule |
 |---|---|
@@ -51,5 +53,5 @@ Then offer, one at a time and with evidence: amend, archive, promote, prune.
 
 ## 5. Mark the audit done
 
-`date +%s > ~/.claude/debug/last-skill-audit` — the SessionStart hook uses it to
+`date +%s > "${SIL_DIR:-$HOME/.claude/debug}/last-skill-audit"` — the SessionStart hook uses it to
 remind you when the next audit is due (7 days or 50 skill uses).

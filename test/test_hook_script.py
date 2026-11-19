@@ -68,15 +68,15 @@ class LifecycleHook(Base):
                 self.assertEqual(self.run_hook("self-improve-hook.sh", "stop", platform, stdin=payload), "")
 
     def test_witness_warns_on_unbacked_claim(self):
-        out = self.run_hook("self-improve-hook.sh", "stop", "codex",
+        out = self.run_hook("self-improve-hook.sh", "stop", "claude",
                             stdin=json.dumps({"last_assistant_message": "Done, all verified."}))
-        self.assertIn("Test-witness", json.loads(out)["reason"])
+        self.assertIn("Test-witness", self.ctx(out, "Stop"))
 
     def test_witness_quiet_after_recent_test_run(self):
         open(self.path("test-witness"), "w").write("npm test\n")
-        out = self.run_hook("self-improve-hook.sh", "stop", "codex",
+        out = self.run_hook("self-improve-hook.sh", "stop", "claude",
                             stdin=json.dumps({"last_assistant_message": "Done, all verified."}))
-        self.assertNotIn("Test-witness", json.loads(out)["reason"])
+        self.assertNotIn("Test-witness", self.ctx(out, "Stop"))
 
     def test_witness_reads_claude_transcript(self):
         tr = self.path("t.jsonl")
@@ -84,6 +84,34 @@ class LifecycleHook(Base):
             f.write(json.dumps({"message": {"role": "assistant", "content": [{"type": "text", "text": "Tests pass, verified."}]}}) + "\n")
         out = self.run_hook("self-improve-hook.sh", "stop", "claude", stdin=json.dumps({"transcript_path": tr}))
         self.assertIn("Test-witness", self.ctx(out, "Stop"))
+
+    def test_codex_skips_claude_only_checks(self):
+        self.write_telemetry(60)
+        start = json.loads(self.run_hook("self-improve-hook.sh", "start", "codex"))
+        self.assertNotIn("audit is due", start["hookSpecificOutput"]["additionalContext"])
+        out = self.run_hook("self-improve-hook.sh", "stop", "codex",
+                            stdin=json.dumps({"last_assistant_message": "all verified"}))
+        self.assertNotIn("Test-witness", json.loads(out)["reason"])
+
+    def test_stop_silent_on_unreadable_input(self):
+        for bad in ("not json", "[1]", ""):
+            for platform in ("claude", "codex"):
+                self.assertEqual(self.run_hook("self-improve-hook.sh", "stop", platform, stdin=bad), "")
+
+    def test_start_survives_odd_telemetry(self):
+        with open(self.path("skill-telemetry.jsonl"), "w") as f:
+            f.write("2026-01-01T00:00:00Z\tpost\tx\n123\n{\"event\":\"post\"}\n")
+        self.write_telemetry(2)
+        ctx = json.loads(self.run_hook("self-improve-hook.sh", "start"))["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("audit is due", ctx)
+
+    def test_witness_reads_long_transcript_tail(self):
+        tr = self.path("t.jsonl")
+        with open(tr, "w") as f:
+            f.write(json.dumps({"message": {"role": "assistant", "content": "x" * 300000}}) + "\n")
+            f.write(json.dumps({"message": {"role": "assistant", "content": "verified " + "y" * 70000}}) + "\n")
+        out = self.run_hook("self-improve-hook.sh", "stop", "claude", stdin=json.dumps({"transcript_path": tr}))
+        self.assertIn("Test-witness", json.loads(out)["hookSpecificOutput"]["additionalContext"])
 
     def test_default_platform_is_claude(self):
         self.assertIn("hookSpecificOutput", self.run_hook("self-improve-hook.sh", "stop"))
@@ -122,8 +150,18 @@ class BashGuard(Base):
             self.assertEqual(self.run_hook("bash-guard.sh", "ok", stdin=json.dumps({"tool_input": {"command": cmd}})), "")
             self.assertTrue(os.path.exists(self.path("test-witness")), cmd)
 
+    def test_witness_for_multiline_command(self):
+        self.run_hook("bash-guard.sh", "ok", stdin=json.dumps({"tool_input": {"command": "cd app\nnpm test"}}))
+        self.assertTrue(os.path.exists(self.path("test-witness")))
+
+    def test_no_witness_when_result_is_masked(self):
+        for cmd in ("pytest -q 2>&1 | tail -5", "npm test || true", "cargo test | grep ok"):
+            self.run_hook("bash-guard.sh", "ok", stdin=json.dumps({"tool_input": {"command": cmd}}))
+        self.assertFalse(os.path.exists(self.path("test-witness")))
+
     def test_no_witness_for_other_commands(self):
-        for cmd in ("ls -la", "bash -n hooks/x.sh", "echo pytest is great", "cat test.py"):
+        for cmd in ("ls -la", "bash -n hooks/x.sh", "echo pytest is great", "cat test.py",
+                    'git commit -m "wip; pytest later"', "git commit -m 'x && npm test'", "makefile-lint"):
             self.run_hook("bash-guard.sh", "ok", stdin=json.dumps({"tool_input": {"command": cmd}}))
         self.assertFalse(os.path.exists(self.path("test-witness")))
 

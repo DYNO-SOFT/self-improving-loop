@@ -21,7 +21,16 @@ AUDIT_DAYS, AUDIT_USES, WITNESS_MIN = 7, 50, 30
 try:
     data = json.load(sys.stdin)
 except Exception:
+    data = None
+if not isinstance(data, dict):
+    # Unreadable input: on stop we cannot see stop_hook_active, so stay silent
+    # rather than risk a loop.
+    if event == "stop":
+        sys.exit(0)
     data = {}
+# Skill telemetry and the test-witness are written by Claude Code hooks only;
+# on Codex they would describe another agent, so those checks are Claude-only.
+claude = platform != "codex"
 
 def age_s(path):
     try:
@@ -39,18 +48,20 @@ if event != "stop":
     marker = os.path.join(d, "last-skill-audit")
     age = age_s(marker)
     uses = 0
-    try:
-        since = os.path.getmtime(marker) if age is not None else 0
-        with open(os.path.join(d, "skill-telemetry.jsonl"), encoding="utf-8") as f:
-            for line in f:
-                try:
-                    r = json.loads(line)
-                except ValueError:
-                    continue
-                if r.get("event") == "post" and calendar.timegm(time.strptime(r["ts"], "%Y-%m-%dT%H:%M:%SZ")) > since:
-                    uses += 1
-    except (OSError, KeyError, ValueError):
-        pass
+    if claude:
+        since = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(os.path.getmtime(marker))) if age is not None else ""
+        try:
+            with open(os.path.join(d, "skill-telemetry.jsonl"), encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        r = json.loads(line)
+                    except ValueError:
+                        continue          # legacy TSV lines
+                    # ISO-8601 UTC strings compare correctly as text: no parsing needed.
+                    if isinstance(r, dict) and r.get("event") == "post" and str(r.get("ts", "")) > since:
+                        uses += 1
+        except OSError:
+            pass
     if uses and (age is None or age > AUDIT_DAYS * 86400 or uses >= AUDIT_USES):
         when = "never" if age is None else "%d days ago" % (age // 86400)
         msg += (" Skill audit is due (last: %s, %d skill uses since): run "
@@ -73,8 +84,10 @@ def last_reply():
     path = data.get("transcript_path")
     try:
         with open(path, "rb") as f:
-            f.seek(0, 2); f.seek(max(0, f.tell() - 65536))
+            f.seek(0, 2); size = f.tell(); f.seek(max(0, size - 262144))
             lines = f.read().decode("utf-8", "replace").splitlines()
+        if size > 262144:
+            lines = lines[1:]   # first line is cut mid-record
     except (OSError, TypeError):
         return ""
     for line in reversed(lines):
@@ -90,7 +103,7 @@ def last_reply():
 
 CLAIMS = ("verified", "tests pass", "all tests", "is fixed", "works now", "проверено", "тесты прошли")
 witness = age_s(os.path.join(d, "test-witness"))
-if (witness is None or witness > WITNESS_MIN * 60) and any(c in last_reply().lower() for c in CLAIMS):
+if claude and (witness is None or witness > WITNESS_MIN * 60) and any(c in last_reply().lower() for c in CLAIMS):
     msg += (" Test-witness: the reply claims verification, but no test or build command "
             "succeeded in the last %d minutes — run it or drop the claim." % WITNESS_MIN)
 

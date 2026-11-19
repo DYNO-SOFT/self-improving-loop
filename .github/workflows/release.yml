@@ -24,6 +24,8 @@ concurrency:
 
 jobs:
   release:
+    # workflow_dispatch can target any branch; only main may tag and publish.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -64,7 +66,7 @@ jobs:
         if: steps.v.outputs.tagged != 'true' || steps.v.outputs.published != 'true'
         run: |
           npm run version:check
-          bash -n hooks/*.sh
+          for f in hooks/*.sh; do bash -n "$f" || exit 1; done
           npm test
 
       - name: Create GitHub release with generated notes

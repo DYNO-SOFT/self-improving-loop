@@ -26,7 +26,7 @@ jobs:
           done
           npm run version:check
       - name: Shell syntax
-        run: bash -n hooks/*.sh
+        run: for f in hooks/*.sh; do bash -n "$f" || exit 1; done
       - name: Tests (DSH cordis plugin, Hermes plugin, hook contract)
         run: npm test
       - name: Package contents

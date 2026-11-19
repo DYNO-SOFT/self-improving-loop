@@ -120,7 +120,7 @@ Manual (no-npm) path — symlink the skill and add the machine-notes loop — se
 | Platform | Skill | Session-start context | Before-finish audit | Skill telemetry |
 |---|---|---|---|---|
 | Claude Code | ✅ | ✅ `SessionStart` hook (+ audit-due reminder) | ✅ `Stop` hook + test-witness | ✅ outcome per use |
-| OpenAI Codex | ✅ | ✅ `SessionStart` hook (+ audit-due reminder) | ✅ `Stop` hook (block once) + test-witness | — |
+| OpenAI Codex | ✅ | ✅ `SessionStart` hook | ✅ `Stop` hook (block once) | — |
 | Hermes Agent | ✅ | ✅ `pre_llm_call` (first turn) | ✅ `pre_verify` | — |
 | DeepSeek Harness | ✅ | ✅ `systemPrompt` context | via the context reminder | — |
 | Cursor | ✅ | — | — | — |

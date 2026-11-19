@@ -2,23 +2,97 @@
   "name": "self-improving-loop",
   "description": "Self-improvement loop and cognitive-error guardrails: verifies your work before done, captures durable lessons and reusable skills, curates Claude Code auto-memory, and watches skills for silent degradation.",
   "version": "0.3.0",
-  "author": { "name": "DYNO SOFT", "url": "https://dynosoft.md" },
+  "author": {
+    "name": "DYNO SOFT",
+    "url": "https://dynosoft.md"
+  },
   "homepage": "https://dynosoft.md",
   "repository": "https://github.com/DYNO-SOFT/self-improving-loop",
   "license": "MIT",
-  "keywords": ["self-improvement", "learning-loop", "skills", "verification", "cognitive-hygiene", "memory", "curation", "skill-degradation"],
+  "keywords": [
+    "self-improvement",
+    "learning-loop",
+    "skills",
+    "verification",
+    "cognitive-hygiene",
+    "memory",
+    "curation",
+    "skill-degradation"
+  ],
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/self-improve-hook.sh start", "shell": "bash", "timeout": 5 } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/self-improve-hook.sh start",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      }
     ],
     "Stop": [
-      { "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/self-improve-hook.sh stop", "shell": "bash", "timeout": 5 } ] }
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/self-improve-hook.sh stop",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      }
     ],
     "PreToolUse": [
-      { "matcher": "Skill", "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-telemetry.sh pre", "shell": "bash", "timeout": 5 } ] }
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-telemetry.sh pre",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      }
     ],
     "PostToolUse": [
-      { "matcher": "Skill", "hooks": [ { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-telemetry.sh post", "shell": "bash", "timeout": 5 } ] }
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/skill-telemetry.sh post",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/bash-guard.sh ok",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/bash-guard.sh fail",
+            "shell": "bash",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }

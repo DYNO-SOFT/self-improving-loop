@@ -11,13 +11,19 @@ degrade. One repo, five platforms.
 
 Most memory plugins do exactly one slice. This plugin fuses the full loop.
 
-| Capability | self-improving-loop | self-improving-agent (claude-skills) | self-improving-skills (unisone) | memem / skillmem / omega-memory |
+| Capability | self-improving-loop | [self-improving-agent](https://github.com/alirezarezvani/claude-skills/tree/main/engineering-team/self-improving-agent) | [self-improving-skills](https://github.com/unisone/self-improving-skills) | [memem](https://github.com/TT-Wang/memem) / [skillmem](https://github.com/liza-studio/skillmem) / [omega-memory](https://github.com/omega-memory/omega-memory) |
 |---|---|---|---|---|
-| Verify-before-done audit (executed vs claimed, exit codes, reproduce-the-fix) | ✅ | — | — | — |
-| Durable memory capture (machine + project) | ✅ | — | — | ✅ |
-| Auto-memory curation + promotion (MEMORY.md -> CLAUDE.md / .claude/rules) | ✅ | ✅ | — | — |
-| Skill degradation loop (telemetry -> audit -> amend -> evaluate) | ✅ | — | ✅ | — |
-| Multi-platform (Claude Code / Codex / Cursor / Hermes / DSH) | ✅ | partial | Claude Code only | Claude Code only |
+| Verify-before-done audit (executed vs claimed, exit codes, reproduce-the-fix) | ✅ + test-witness | error-capture nudge | — | skillmem: test-witness |
+| Durable memory capture (machine + project) | ✅ | ✅ (`/si:remember`) | — | ✅ |
+| Auto-memory curation + promotion (scored rubric, capacity gauge, dead refs) | ✅ | ✅ | — | — |
+| Skill degradation loop (outcome telemetry → audit → versioned amend → evaluate → rollback) | ✅ | — | ✅ | skillmem: strength + decay |
+| Untrusted agent-written memory | ✅ (marked until confirmed) | — | — | skillmem |
+| Runtime footprint | markdown + shell + python stdlib | markdown + shell + python | markdown + shell + `jq` | MCP server + SQLite / embeddings |
+| Platforms | Claude Code, Codex, Hermes, DSH (hooks); Cursor (skill) | Claude Code + copies for Codex, Gemini, Hermes | Claude Code | Claude Code hooks; MCP for Codex, Cursor and others |
+
+What we deliberately do **not** ship: MCP servers, databases, embeddings, or LLM
+calls inside hooks. They add daemons, downloads and cost, and LLM-in-hook mining
+has caused hook-recursion incidents elsewhere. Everything here is files you can read.
 
 The three loops it fuses:
 
@@ -41,6 +47,23 @@ The three loops it fuses:
 ```
 
 Local dev: `/plugin marketplace add /path/to/self-improving-loop`
+
+### Commands (Claude Code)
+
+| Command | What it does |
+|---|---|
+| `/self-improve` | run the loop now: audit this session, save durable lessons |
+| `/self-audit` | cognitive-error audit only, no memory writes |
+| `/self-improve-audit` | skill + memory health: score, degraded/stale/archive, amendment evaluation, dead refs, promotion candidates |
+| `/skill-feedback <skill> good\|bad [notes]` | rate a skill; feeds the audit |
+| `/skill-rollback <skill> [version]` | restore a versioned skill backup |
+
+Hooks: `SessionStart` (context + audit-due reminder after 7 days / 50 skill uses),
+`Stop` (audit before finishing, once per turn; test-witness check),
+`Pre/PostToolUse` on `Skill` (telemetry with outcome), `PostToolUse` on `Bash`
+(records a successful test/build run), `PostToolUseFailure` on `Bash` (fix-or-record nudge).
+State lives in `~/.claude/debug/` (`skill-telemetry.jsonl`, `skill-feedback.jsonl`,
+`last-skill-audit`, `test-witness`); override with `SIL_DIR`.
 
 ### OpenAI Codex
 
@@ -96,8 +119,8 @@ Manual (no-npm) path — symlink the skill and add the machine-notes loop — se
 
 | Platform | Skill | Session-start context | Before-finish audit | Skill telemetry |
 |---|---|---|---|---|
-| Claude Code | ✅ | ✅ `SessionStart` hook | ✅ `Stop` hook | ✅ `Pre/PostToolUse` on `Skill` |
-| OpenAI Codex | ✅ | ✅ `SessionStart` hook | ✅ `Stop` hook (block once) | — |
+| Claude Code | ✅ | ✅ `SessionStart` hook (+ audit-due reminder) | ✅ `Stop` hook + test-witness | ✅ outcome per use |
+| OpenAI Codex | ✅ | ✅ `SessionStart` hook (+ audit-due reminder) | ✅ `Stop` hook (block once) + test-witness | — |
 | Hermes Agent | ✅ | ✅ `pre_llm_call` (first turn) | ✅ `pre_verify` | — |
 | DeepSeek Harness | ✅ | ✅ `systemPrompt` context | via the context reminder | — |
 | Cursor | ✅ | — | — | — |

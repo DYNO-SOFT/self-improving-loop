@@ -1,0 +1,87 @@
+# Release on version bump: when package.json on main carries a version that has no
+# v<version> tag yet, run the tests, create the tag + GitHub release with generated
+# notes, then publish to npm. Each step is idempotent, so a failed run can be re-run.
+#
+# npm auth: npm trusted publishing (OIDC, no secret) — configure it once at
+# npmjs.com -> @dynosoft/self-improving-loop -> Settings -> Trusted publisher
+# (GitHub Actions, repo DYNO-SOFT/self-improving-loop, workflow release.yml).
+# Fallback: an NPM_TOKEN repository secret (automation token) is used when set.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # tag + GitHub release
+  id-token: write   # npm trusted publishing + provenance
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Read version
+        id: v
+        run: |
+          version=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./package.json').name")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "tagged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
+          fi
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Nothing to release
+        if: steps.v.outputs.tagged == 'true' && steps.v.outputs.published == 'true'
+        run: echo "${{ steps.v.outputs.tag }} is already tagged and on npm."
+
+      - name: Verify
+        if: steps.v.outputs.tagged != 'true' || steps.v.outputs.published != 'true'
+        run: |
+          npm run version:check
+          bash -n hooks/*.sh
+          npm test
+
+      - name: Create GitHub release with generated notes
+        if: steps.v.outputs.tagged != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prev=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          args=(--target "$GITHUB_SHA" --title "${{ steps.v.outputs.tag }}" --generate-notes)
+          [ -n "$prev" ] && args+=(--notes-start-tag "$prev")
+          gh release create "${{ steps.v.outputs.tag }}" "${args[@]}"
+
+      - name: Publish to npm
+        if: steps.v.outputs.published != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # With no NPM_TOKEN secret, drop the empty token line so npm uses OIDC trusted publishing.
+          [ -n "$NODE_AUTH_TOKEN" ] || sed -i '/_authToken/d' "$NPM_CONFIG_USERCONFIG"
+          npm publish --provenance --access public

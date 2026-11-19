@@ -2,7 +2,7 @@
   "name": "self-improving-loop",
   "displayName": "Self-Improving Loop",
   "description": "Self-improvement loop and cognitive-error guardrails.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "author": { "name": "DYNO SOFT", "url": "https://dynosoft.md" },
   "homepage": "https://dynosoft.md",
   "repository": "https://github.com/DYNO-SOFT/self-improving-loop",

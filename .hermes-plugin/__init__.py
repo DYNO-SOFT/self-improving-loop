@@ -2,6 +2,12 @@ import os
 from pathlib import Path
 
 BOOTSTRAP_MARKER = "self-improving-loop bootstrap for hermes"
+VERIFY_NUDGE = (
+    "Before you finish: run the self-improve audit (verify every claim — executed? "
+    "exit code checked? number, not a guess?) and save any durable lesson (fact -> "
+    "memory or <repo>/AGENTS.md; repeatable procedure -> a skill). State in your "
+    "final answer what you verified and saved."
+)
 
 
 def _skills_dir():
@@ -50,3 +56,10 @@ def register(ctx):
         return None
 
     ctx.register_hook("pre_llm_call", pre_llm_call)
+
+    # Stop-hook equivalent: Hermes fires pre_verify once per turn when the agent
+    # edited code and is about to finish; agent.max_verify_nudges bounds repeats.
+    def pre_verify(**kwargs):
+        return {"action": "continue", "message": VERIFY_NUDGE}
+
+    ctx.register_hook("pre_verify", pre_verify)

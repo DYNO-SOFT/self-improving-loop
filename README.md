@@ -44,9 +44,19 @@ Local dev: `/plugin marketplace add /path/to/self-improving-loop`
 
 ### OpenAI Codex
 
-The `.codex-plugin/plugin.json` shim ships the skill and interface. Add this
-repo as a Codex plugin source (Codex reads `.codex-plugin/`), or copy
-`skills/self-improve` into your Codex skills directory.
+Codex reads `.codex-plugin/plugin.json`: it ships the `self-improve` skill and the
+lifecycle hooks in `.codex-plugin/hooks.json` (Codex hooks are stable and on by
+default). Add this repo as a Codex plugin source, or copy `skills/self-improve`
+into your Codex skills directory (skill only, no hooks).
+
+Hooks on Codex:
+
+| Event | Effect |
+|---|---|
+| `SessionStart` | adds a short "self-improvement is active" context |
+| `Stop` | returns `{"decision":"block","reason":…}` once, so the agent runs the audit before finishing |
+
+The Stop hook exits silently when `stop_hook_active` is true, so it fires once per turn and never loops.
 
 ### Cursor
 
@@ -59,7 +69,12 @@ or copy `skills/self-improve` into your Cursor rules.
 hermes plugins install DYNO-SOFT/self-improving-loop
 ```
 
-Registers the skill and a `pre_llm_call` hook that bootstraps the loop on session start.
+Registers the skills and two hooks:
+
+| Hook | Effect |
+|---|---|
+| `pre_llm_call` | first turn only: injects the self-improve skill as bootstrap context |
+| `pre_verify` | Stop equivalent: once per turn, when the agent edited code and is about to finish, asks it to run the audit (bounded by `agent.max_verify_nudges`) |
 
 ### DeepSeek Harness (DSH)
 
@@ -68,14 +83,49 @@ dsh plugin add @dynosoft/self-improving-loop
 ```
 
 (or `pnpm add @dynosoft/self-improving-loop`). Ships a cordis plugin
-(`lib/index.js` + `cordis.patch.yml`) that registers the `self-improve` skill
-into the DSH skill catalog. Manual (no-npm) path — symlink the skill and add
-the machine-notes loop — see `dsh/README.md`.
+(`lib/index.js` + `cordis.patch.yml`) that:
+
+- registers the `self-improve` skill into the DSH skill catalog (`inject: ['skills']`);
+- when the `systemPrompt` service is mounted, adds a short runtime context
+  (`self-improving-loop:reminder`) — the DSH counterpart of the SessionStart hook.
+  It is an optional dependency, so the plugin still loads without it.
+
+Manual (no-npm) path — symlink the skill and add the machine-notes loop — see `dsh/README.md`.
+
+### Platform matrix
+
+| Platform | Skill | Session-start context | Before-finish audit | Skill telemetry |
+|---|---|---|---|---|
+| Claude Code | ✅ | ✅ `SessionStart` hook | ✅ `Stop` hook | ✅ `Pre/PostToolUse` on `Skill` |
+| OpenAI Codex | ✅ | ✅ `SessionStart` hook | ✅ `Stop` hook (block once) | — |
+| Hermes Agent | ✅ | ✅ `pre_llm_call` (first turn) | ✅ `pre_verify` | — |
+| DeepSeek Harness | ✅ | ✅ `systemPrompt` context | via the context reminder | — |
+| Cursor | ✅ | — | — | — |
 
 ## Measure effectiveness
 
 Repeat a task class a week later and count how much steering it still needs.
 Fewer corrections = the loop is working.
+
+## Development
+
+```
+npm test               # DSH plugin (node:test) + Hermes plugin + hook contract (unittest)
+npm run version:check  # every platform manifest matches package.json
+```
+
+## Releasing
+
+Releases are automated by `.github/workflows/release.yml`:
+
+1. Bump the version: `npm version minor` (syncs all manifests via `scripts/sync-version.mjs`).
+2. Merge the change to `main` (`git push --follow-tags` is not needed — the workflow tags).
+3. The workflow runs the tests, creates tag `vX.Y.Z` and a GitHub release with generated
+   notes (categories in `.github/release.yml`), then publishes to npm with provenance.
+
+npm auth uses trusted publishing (OIDC): configure it once at npmjs.com → package
+settings → Trusted publisher (repo `DYNO-SOFT/self-improving-loop`, workflow
+`release.yml`). An `NPM_TOKEN` repository secret is used instead when present.
 
 ## About
 

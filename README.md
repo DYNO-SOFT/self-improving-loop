@@ -32,7 +32,9 @@ The three loops it fuses:
    A claim that fails the audit gets fixed, not shipped.
 2. **Memory promotion** — auto-memory (MEMORY.md) is capture, not curation. A
    pattern that recurs 2-3 times graduates into CLAUDE.md or a scoped
-   `.claude/rules/` rule. Machine lessons go to `~/.claude/LEARNED.md`.
+   `.claude/rules/` rule. Machine lessons go to `~/.self-improving-loop/LEARNED.md`, shared by all
+   supported agents. The self-improve skill also reads existing agent-specific
+   lesson files as read-only sources and checks them for duplicates before saving.
 3. **Skill degradation** — a skill is a static file in a dynamic environment and
    it decays silently. Telemetry logs every use; the audit flags unused or
    broken skills; amendments are backed up and evaluated.

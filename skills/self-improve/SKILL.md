@@ -1,6 +1,6 @@
 ---
 name: self-improve
-description: Run before finalizing any session with real work, and whenever the agent is about to claim something is done, fixed, or verified — to (1) audit for cognitive errors (unverified claims, missing exit-code checks, stale assumptions, unproven works) and (2) capture durable lessons so future sessions need less steering. Also run after the user corrects the agent.
+description: Load shared machine lessons when applying past preferences or lessons. Run before finalizing any session with real work, and whenever the agent is about to claim something is done, fixed, or verified — to (1) audit for cognitive errors (unverified claims, missing exit-code checks, stale assumptions, unproven works) and (2) capture durable lessons so future sessions need less steering. Also run after the user corrects the agent.
 ---
 
 # Self-Improve (self-learning + cognitive-error guard)
@@ -13,7 +13,7 @@ reusable skill.
 
 ## The loop (Hermes-style)
 
-1. Understand the task; inspect the real environment with tools, not guesses.
+1. Read the shared and legacy machine lessons below, then inspect the real environment with tools.
 2. Act with tools.
 3. Verify — run the thing with a real test, browser check, or command output;
    check the exit code. A syntax/lint check is not a run.
@@ -43,9 +43,31 @@ If any answer is no, fix the claim or the verification before finishing.
 ## Routing: fact vs procedure
 
 - Durable FACT (preference, env path, quota, tool quirk, a correction) -> memory:
-  machine-wide -> `~/.claude/LEARNED.md`; project-wide -> `<repo>/AGENTS.md`.
+  machine-wide -> `~/.self-improving-loop/LEARNED.md`; project-wide -> `<repo>/AGENTS.md`.
 - Repeatable PROCEDURE (multi-step workflow, checklist, commands, known failures)
   -> a skill under `~/.claude/skills/<name>/SKILL.md` (frontmatter name + description).
+
+## Shared machine memory
+
+Read `~/.self-improving-loop/LEARNED.md` and all existing legacy files before
+using machine lessons or deciding whether to save one, regardless of the current agent:
+
+- `~/LEARNED.md`
+- `~/.claude/LEARNED.md`
+- `~/.codex/LEARNED.md`
+- `~/.cursor/LEARNED.md`
+- `~/.hermes/LEARNED.md` and `~/.hermes/memories/LEARNED.md`
+- `~/.dsh/LEARNED.md`, and machine lessons saved by older installs in `~/.dsh/AGENTS.md`
+
+Also check the corresponding paths under configured agent homes, such as
+`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `HERMES_HOME`, when they are set.
+Skip missing files. Prefer the shared entry if it conflicts with a legacy entry,
+and check all sources for duplicates before saving a lesson.
+
+When saving a new machine lesson, create `~/.self-improving-loop/` and its
+`LEARNED.md` if needed. Save machine lessons only in this file. Treat legacy
+files as read-only, including during pruning. If the shared path is a symlink
+to a legacy file, report the conflict before writing so the legacy file stays read-only.
 
 ## Claude Code auto-memory (curate, do not duplicate)
 
@@ -66,9 +88,8 @@ not re-invent it — curate it on every review:
 5. Watch capacity: MEMORY.md is loaded only up to ~200 lines — past ~150, prune
    or promote before adding.
 
-Do not write the same fact into three places. Machine-level lessons go to
-~/.claude/LEARNED.md; project-level go to <repo>/AGENTS.md, and MEMORY.md only
-when the fact is that project own.
+Keep machine-level lessons in the shared memory described above. Keep
+project-level lessons in `<repo>/AGENTS.md` and use `MEMORY.md` for project context.
 
 ## Skills degrade — observe and repair
 

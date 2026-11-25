@@ -5,7 +5,8 @@ BOOTSTRAP_MARKER = "self-improving-loop bootstrap for hermes"
 VERIFY_NUDGE = (
     "Before you finish: run the self-improve audit (verify every claim — executed? "
     "exit code checked? number, not a guess?) and save any durable lesson (fact -> "
-    "memory or <repo>/AGENTS.md; repeatable procedure -> a skill). State in your "
+    "~/.self-improving-loop/LEARNED.md for machine lessons or <repo>/AGENTS.md for project lessons; "
+    "repeatable procedure -> a skill). State in your "
     "final answer what you verified and saved."
 )
 
@@ -36,7 +37,8 @@ def _build_bootstrap(skills_dir):
         "<SELF_IMPROVING>\n"
         + BOOTSTRAP_MARKER + "\n\n"
         + "Self-improvement is active this session. The self-improve skill is "
-        + "loaded below; follow it before finalizing any work.\n\n"
+        + "loaded below. Read the shared and legacy machine lessons now, and "
+        + "run the audit before finalizing any work.\n\n"
         + body
         + "\n</SELF_IMPROVING>"
     )

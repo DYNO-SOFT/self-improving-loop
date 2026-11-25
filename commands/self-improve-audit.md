@@ -33,9 +33,10 @@ data". Report improved / regressed / unchanged; offer `/skill-rollback` on regre
 ## 3. Memory health
 
 - Capacity: line count of each MEMORY.md (warn ≥ 150, the loader caps at 200),
-  `~/.claude/LEARNED.md`, project `AGENTS.md`.
+  `~/.self-improving-loop/LEARNED.md`, the legacy memory sources listed in the self-improve skill,
+  and project `AGENTS.md`.
 - Dead references: every path or file name mentioned in those files that no
-  longer exists (`test -e`). Report them; prune after confirmation.
+  longer exists (`test -e`). Report them and prune writable sources after confirmation.
 - Duplicates and contradictions between the files.
 - Promotion candidates: score each recurring entry with the rubric in the
   self-improve skill (promote at ≥ 6/9).

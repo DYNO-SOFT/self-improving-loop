@@ -42,7 +42,8 @@ def emit(name, text):
     print(json.dumps({"hookSpecificOutput": {"hookEventName": name, "additionalContext": text}}))
 
 if event != "stop":
-    msg = ("Self-improvement is active this session. Before finalizing work, run the "
+    msg = ("Self-improvement is active this session. Load shared and legacy machine "
+           "lessons as described in the self-improve skill. Before finalizing work, run the "
            "self-improve skill: audit for cognitive errors and capture durable lessons "
            "so future sessions need less steering.")
     marker = os.path.join(d, "last-skill-audit")
@@ -73,9 +74,11 @@ if event != "stop":
 if data.get("stop_hook_active"):
     sys.exit(0)
 
-msg = ("Before you finish: run the self-improve audit (verify every claim — executed? "
-       "exit code checked? number, not a guess?) and save any durable lesson (fact -> "
-       "~/.claude/LEARNED.md or <repo>/AGENTS.md; repeatable procedure -> a skill). "
+msg = ("Before you finish: load the self-improve skill and run the self-improve audit "
+       "(verify every claim — executed? exit code checked? number, not a guess?) "
+       "and save any durable lesson (fact -> "
+       "~/.self-improving-loop/LEARNED.md for machine lessons or <repo>/AGENTS.md for project lessons; "
+       "repeatable procedure -> a skill). "
        "State in your final answer what you verified and saved.")
 
 def last_reply():

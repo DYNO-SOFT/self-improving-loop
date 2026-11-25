@@ -37,7 +37,9 @@ class LifecycleHook(Base):
 
     def test_start_both_platforms(self):
         for platform in ("claude", "codex"):
-            self.assertIn("self-improve", self.ctx(self.run_hook("self-improve-hook.sh", "start", platform), "SessionStart"))
+            ctx = self.ctx(self.run_hook("self-improve-hook.sh", "start", platform), "SessionStart")
+            self.assertIn("self-improve", ctx)
+            self.assertIn("Load shared and legacy machine lessons", ctx)
 
     def test_audit_due_when_never_audited(self):
         self.write_telemetry(3)
@@ -55,12 +57,14 @@ class LifecycleHook(Base):
         self.assertIn("audit is due", self.ctx(self.run_hook("self-improve-hook.sh", "start"), "SessionStart"))
 
     def test_stop_claude(self):
-        self.assertIn("self-improve audit", self.ctx(self.run_hook("self-improve-hook.sh", "stop", "claude"), "Stop"))
+        ctx = self.ctx(self.run_hook("self-improve-hook.sh", "stop", "claude"), "Stop")
+        self.assertIn("self-improve audit", ctx)
+        self.assertIn("~/.self-improving-loop/LEARNED.md for machine lessons", ctx)
 
     def test_stop_codex_blocks_once(self):
         out = json.loads(self.run_hook("self-improve-hook.sh", "stop", "codex"))
         self.assertEqual(out["decision"], "block")
-        self.assertTrue(out["reason"])
+        self.assertIn("~/.self-improving-loop/LEARNED.md for machine lessons", out["reason"])
 
     def test_stop_guard_prevents_loop(self):
         for platform in ("claude", "codex"):

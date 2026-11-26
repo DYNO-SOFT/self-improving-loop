@@ -1,6 +1,6 @@
 {
   "name": "@dynosoft/self-improving-loop",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Self-improvement loop and cognitive-error guardrails for coding agents: verify before done, capture durable lessons and reusable skills, curate auto-memory, and detect silent skill degradation. One package, five platforms (Claude Code / Codex / Cursor / Hermes / DSH).",
   "license": "MIT",
   "author": {

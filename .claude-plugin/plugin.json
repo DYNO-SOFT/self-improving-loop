@@ -1,7 +1,7 @@
 {
   "name": "self-improving-loop",
   "description": "Self-improvement loop and cognitive-error guardrails: verifies your work before done, captures durable lessons and reusable skills, curates Claude Code auto-memory, and watches skills for silent degradation.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": {
     "name": "DYNO SOFT",
     "url": "https://dynosoft.md"

@@ -13,10 +13,9 @@ The self-improvement loop ships as a DSH agent skill (filesystem provider at
 2. Ensure the machine-notes rule is present in ~/.dsh/AGENTS.md (the file DSH
    loads into every session):
 
-   Load shared and legacy machine lessons as described in the self-improve
+   Load applicable shared and project lessons as described in the self-improve
    skill. Before the final answer of any session that did real work, run the
-   skill and save verified machine lessons to `~/.self-improving-loop/LEARNED.md` and project
-   lessons to the repo `AGENTS.md`.
+   skill and save verified lessons in the matching shared or project learned file.
 
 Prefer the native cordis plugin when you can use npm: `dsh plugin add
 @dynosoft/self-improving-loop` registers the skill and a runtime reminder

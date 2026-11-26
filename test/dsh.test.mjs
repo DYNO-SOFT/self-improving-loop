@@ -10,7 +10,11 @@ test('registers the self-improve skill', () => {
   assert.equal(skills[0].name, 'self-improve')
   assert.ok(skills[0].content.length > 200)
   assert.ok(!skills[0].content.startsWith('---'))
-  assert.ok(skills[0].content.includes('Read `~/.self-improving-loop/LEARNED.md` and all existing legacy files'))
+  assert.ok(skills[0].content.includes('~/.self-improving-loop/projects/<project-id>/LEARNED.md'))
+  assert.ok(skills[0].content.includes('gitlab.com/team/backend/payments'))
+  assert.ok(skills[0].content.includes('bitbucket.org/team/payments'))
+  assert.ok(skills[0].content.includes('git config --local --get self-improving-loop.project-id'))
+  assert.ok(skills[0].content.includes('Read legacy files only for an explicit migration or memory audit.'))
   assert.ok(skills[0].content.includes('- `~/LEARNED.md`'))
 })
 
@@ -23,7 +27,7 @@ test('adds the reminder context when systemPrompt is mounted', () => {
   plugin.apply(ctx)
   assert.equal(contexts.length, 1)
   assert.equal(contexts[0].text, plugin.REMINDER)
-  assert.ok(contexts[0].text.includes('machine facts -> ~/.self-improving-loop/LEARNED.md'))
+  assert.ok(contexts[0].text.includes('shared or project learned file specified by the skill'))
   assert.equal(contexts[0].interpolate, false)
 })
 

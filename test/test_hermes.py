@@ -23,14 +23,15 @@ class HermesPluginTest(unittest.TestCase):
     def test_bootstrap_only_on_first_turn(self):
         first = self.ctx.hooks["pre_llm_call"](is_first_turn=True)
         self.assertIn(plugin.BOOTSTRAP_MARKER, first["context"])
-        self.assertIn("Read `~/.self-improving-loop/LEARNED.md` and all existing legacy files", first["context"])
+        self.assertIn("~/.self-improving-loop/projects/<project-id>/LEARNED.md", first["context"])
+        self.assertIn("Read legacy files only for an explicit migration or memory audit.", first["context"])
         self.assertIsNone(self.ctx.hooks["pre_llm_call"](is_first_turn=False))
 
     def test_pre_verify_nudges(self):
         out = self.ctx.hooks["pre_verify"](session_id="s")
         self.assertEqual(out["action"], "continue")
         self.assertIn("self-improve audit", out["message"])
-        self.assertIn("~/.self-improving-loop/LEARNED.md for machine lessons", out["message"])
+        self.assertIn("shared or project learned file specified by the self-improve skill", out["message"])
 
 
 if __name__ == "__main__":

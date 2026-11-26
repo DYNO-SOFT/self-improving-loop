@@ -1,6 +1,6 @@
 {
   "name": "self-improving-loop",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Self-improvement loop and cognitive-error guardrails: verify before done, capture lessons and skills, curate auto-memory, watch skills for degradation.",
   "author": { "name": "DYNO SOFT", "url": "https://dynosoft.md" },
   "homepage": "https://dynosoft.md",

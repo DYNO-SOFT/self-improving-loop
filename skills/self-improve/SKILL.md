@@ -13,7 +13,7 @@ reusable skill.
 
 ## The loop (Hermes-style)
 
-1. Read the shared and legacy machine lessons below, then inspect the real environment with tools.
+1. Read the applicable lessons below, then inspect the real environment with tools.
 2. Act with tools.
 3. Verify — run the thing with a real test, browser check, or command output;
    check the exit code. A syntax/lint check is not a run.
@@ -42,15 +42,59 @@ If any answer is no, fix the claim or the verification before finishing.
 
 ## Routing: fact vs procedure
 
-- Durable FACT (preference, env path, quota, tool quirk, a correction) -> memory:
-  machine-wide -> `~/.self-improving-loop/LEARNED.md`; project-wide -> `<repo>/AGENTS.md`.
+- Durable FACT (preference, env path, quota, tool quirk, a correction) -> the applicable learned file below.
+  Keep team-wide repository instructions in `<repo>/AGENTS.md`.
 - Repeatable PROCEDURE (multi-step workflow, checklist, commands, known failures)
   -> a skill under `~/.claude/skills/<name>/SKILL.md` (frontmatter name + description).
 
-## Shared machine memory
+## Shared and project memory
 
-Read `~/.self-improving-loop/LEARNED.md` and all existing legacy files before
-using machine lessons or deciding whether to save one, regardless of the current agent:
+- Read `~/.self-improving-loop/LEARNED.md` for general preferences and lessons
+  applicable across projects. In a Git repository, also read its private notes
+  at `~/.self-improving-loop/projects/<project-id>/LEARNED.md`. Skip missing files.
+- Resolve `<project-id>` from `git remote get-url origin`. For HTTPS, SSH
+  (including `user@host:path`), or Git URLs, use `host/full-repository-path`.
+  Strip credentials, the scheme, outer slashes, and the final `.git`. Lowercase
+  the host and, on `github.com`, the repository path. Preserve explicit ports
+  and the repository path's case elsewhere, subject to the rules below.
+  - GitLab supports nested groups. For example,
+    `git@gitlab.com:team/backend/payments.git` and
+    `https://gitlab.com/team/backend/payments.git` both map to
+    `gitlab.com/team/backend/payments`. Keep the full path on self-managed hosts too.
+  - Bitbucket Cloud uses the workspace and repository slug. For example,
+    `ssh://git@bitbucket.org/team/payments.git` and
+    `https://user@bitbucket.org/team/payments.git` both map to
+    `bitbucket.org/team/payments`.
+  - For SSH on port 443, map `altssh.gitlab.com:443` to `gitlab.com` and
+    `altssh.bitbucket.org:443` to `bitbucket.org`.
+  - For known equivalent custom endpoints, including Bitbucket Data Center,
+    use a repository-local override if configured. Read it with
+    `git config --local --get self-improving-loop.project-id` and prefer it over
+    the origin. For example, use `bitbucket.example.com/PROJ/payments` for both
+    `https://bitbucket.example.com/scm/PROJ/payments.git` and
+    `ssh://git@bitbucket.example.com:7999/PROJ/payments.git`. Configure the same
+    ID in each clone that should share notes.
+- Validate remote and override IDs as relative `host/path` values. Reject empty
+  path components, `.` and `..`, backslashes, encoded separators or traversal,
+  queries, fragments, and the reserved first component `local`. Ignore an
+  invalid override. For a missing, local, or unusable origin, use
+  `local/<physical-absolute-git-common-dir-without-leading-slash>`, obtained from
+  `git rev-parse --path-format=absolute --git-common-dir` and resolved through
+  symlinks. This shares notes between worktrees. Outside Git, read only the shared file.
+- Read another project's notes only when the task involves that project or the
+  user asks for a cross-project lookup. Resolve each project's ID separately.
+  Keep project facts tied to their source and verify they apply before reusing
+  them elsewhere. When a lesson applies across projects, put the general rule
+  in the shared file and keep project-specific evidence in the owning file.
+- Read the destination before appending and create it only when saving a lesson.
+  Check loaded notes for duplicates. If the destination resolves through a
+  symlink to a legacy source or another scope, report it before writing.
+
+### Legacy sources
+
+Read legacy files only for an explicit migration or memory audit. Use them as
+read-only sources. Copy only relevant lessons to the matching scope, deduplicate
+against the destination, and prefer its entry when there is a conflict.
 
 - `~/LEARNED.md`
 - `~/.claude/LEARNED.md`
@@ -59,15 +103,8 @@ using machine lessons or deciding whether to save one, regardless of the current
 - `~/.hermes/LEARNED.md` and `~/.hermes/memories/LEARNED.md`
 - `~/.dsh/LEARNED.md`, and machine lessons saved by older installs in `~/.dsh/AGENTS.md`
 
-Also check the corresponding paths under configured agent homes, such as
-`CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `HERMES_HOME`, when they are set.
-Skip missing files. Prefer the shared entry if it conflicts with a legacy entry,
-and check all sources for duplicates before saving a lesson.
-
-When saving a new machine lesson, create `~/.self-improving-loop/` and its
-`LEARNED.md` if needed. Save machine lessons only in this file. Treat legacy
-files as read-only, including during pruning. If the shared path is a symlink
-to a legacy file, report the conflict before writing so the legacy file stays read-only.
+For those operations also check the corresponding paths under configured agent
+homes, such as `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `HERMES_HOME`. Skip missing files.
 
 ## Claude Code auto-memory (curate, do not duplicate)
 
@@ -88,8 +125,9 @@ not re-invent it — curate it on every review:
 5. Watch capacity: MEMORY.md is loaded only up to ~200 lines — past ~150, prune
    or promote before adding.
 
-Keep machine-level lessons in the shared memory described above. Keep
-project-level lessons in `<repo>/AGENTS.md` and use `MEMORY.md` for project context.
+Keep machine-level lessons in shared memory and private project lessons in the
+project's learned file. Use `AGENTS.md` for repository instructions and `MEMORY.md`
+for Claude Code's project context.
 
 ## Skills degrade — observe and repair
 
